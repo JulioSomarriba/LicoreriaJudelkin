@@ -6,13 +6,13 @@ const app = express();
 const port = 5000;
 
 // Middleware para analizar el cuerpo de la solicitud en formato JSON
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Aumenta el límite del tamaño del cuerpo a 50MB o al valor adecuado
 
 // Configuración de la conexión a la base de datos
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'Mysql2023',
+    password: 'gitdev2051',
     database: 'judelkin'
   });
   
@@ -31,6 +31,15 @@ const db = mysql.createConnection({
 const crudRoutes = require('./Routes/crudRoutes')(db); // Pasa la instancia de la base de datos a crudRoutes
 app.use('/crud', crudRoutes);
   
+// Manejador de errores
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && 'body' in err) {
+    res.status(400).send({ error: 'Error en el análisis de JSON' });
+  } else {
+    next();
+  }
+});
+
   // Iniciar el servidor
   app.listen(port, () => {
     console.log(`Servidor backend en funcionamiento en el puerto ${port}`);

@@ -4,6 +4,23 @@ const router = express.Router();
 //Ruta para consultar clientes
 module.exports = (db) => {
 
+  router.get('/readcategoria', (req, res) => {
+    // Utiliza la instancia de la base de datos pasada como parámetro
+    // Realizar una consulta SQL para seleccionar todos los registros
+    const sql = 'SELECT * FROM categoria';
+
+    // Ejecutar la consulta
+    db.query(sql, (err, result) => {
+      if (err) {
+        console.error('Error al leer registros:', err);
+        res.status(500).json({ error: 'Error al leer registros' });
+      } else {
+        // Devolver los registros en formato JSON como respuesta
+        res.status(200).json(result);
+      }
+    });
+  });
+
   router.get('/readcliente', (req, res) => {
     // Utiliza la instancia de la base de datos pasada como parámetro
     // Realizar una consulta SQL para seleccionar todos los registros
@@ -146,16 +163,16 @@ module.exports = (db) => {
   // Ruta para crear un nuevo producto
    
   router.post('/createproducto', (req, res) => {
-    const {nombre, cantidad, precio, descripcion, porcentaje_alcohol} = req.body;
+    const {nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen} = req.body;
   
 
-    if (!nombre ||!cantidad ||!precio ||! descripcion ||! [porcentaje_alcohol]) {
+    if (!nombre || !cantidad || !precio || !descripcion || !porcentaje_alcohol || !idcategoria || !imagen) {
       return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
   
     // Consulta SQL para insertar un nuevo producto
-    const sql = 'INSERT INTO producto (nombre, cantidad, precio, descripcion, porcentaje_alcohol) VALUES (?,?,?,?,?)';
-    const values = [nombre, cantidad, precio, descripcion, porcentaje_alcohol];
+    const sql = 'INSERT INTO producto (nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen) VALUES (?,?,?,?,?,?,?)';
+    const values = [nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen];
   
     // Ejecuta la consulta SQL
     db.query(sql, values, (err, result) => {
