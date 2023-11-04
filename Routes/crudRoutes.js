@@ -358,37 +358,33 @@ module.exports = (db) => {
     //Ruta para actualizar un registro existente por ID (producto)
 
     router.put('/updateproducto/:id', (req, res) => {
-      // Obtén el ID del registro a actualizar desde los parámetros de la URL
-      const id = req.params.id;
-  
-      // Recibe los datos actualizados desde el cuerpo de la solicitud (req.body)
-      const {nombre, cantidad, precio, descripcion, porcentaje_alcohol} = req.body;
-  
-      // Verifica si se proporcionaron los datos necesarios
-      if (!nombre) {
+      const idproducto = req.params.id;
+      const { nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen } = req.body;
+    
+      if (!nombre || !cantidad || !precio || !descripcion || !porcentaje_alcohol || !idcategoria || !imagen) {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
       }
-  
-      // Realiza la consulta SQL para actualizar el registro por ID
-      const sql = `
-        UPDATE producto
-        SET nombre=?, cantidad=?, precio=?, descripcion=?, porcentaje_alcohol =?
-        WHERE idproducto = ?
-      `;
-  
-      const values = [nombre, cantidad, precio, descripcion, porcentaje_alcohol];
-  
-      // Ejecuta la consulta
+    
+      // Consulta SQL para actualizar un producto
+      const sql = 'UPDATE producto SET nombre = ?, cantidad = ?, precio = ?, descripcion = ?, porcentaje_alcohol = ?, idcategoria = ?, imagen = ? WHERE idproducto = ?';
+      const values = [nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen, idproducto];
+    
+      // Ejecuta la consulta SQL
       db.query(sql, values, (err, result) => {
         if (err) {
-          console.error('Error al actualizar el registro:', err);
-          res.status(500).json({ error: 'Error al actualizar el registro' });
+          console.error('Error al actualizar el producto:', err);
+          res.status(500).json({ error: 'Error al actualizar el producto' });
         } else {
-          // Devuelve un mensaje de éxito
-          res.status(200).json({ message: 'Registro actualizado con éxito' });
+          // Verifica si el producto fue actualizado exitosamente
+          if (result.affectedRows > 0) {
+            res.status(200).json({ message: 'Producto actualizado con éxito' });
+          } else {
+            res.status(404).json({ error: 'Producto no encontrado' });
+          }
         }
       });
     });
+    
 
      //Ruta para actualizar un registro existente por ID (cliente)
 
