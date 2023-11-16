@@ -4,6 +4,31 @@ const router = express.Router();
 //Ruta para consultar clientes
 module.exports = (db) => {
 
+  // Ruta para verificar las credenciales y obtener el rol del usuario
+  router.post('/login', (req, res) => {
+    const { nombre_Usuario, contrasena } = req.body;
+
+    if (!nombre_Usuario || !contrasena) {
+      return res.status(400).json({ error: 'Nombre de usuario y contraseña son obligatorios' });
+    }
+
+    // Realizar la consulta para verificar las credenciales en la base de datos
+    const sql = `SELECT rol FROM Usuario WHERE nombre_Usuario = ? AND contrasena = ?`;
+    db.query(sql, [nombre_Usuario, contrasena], (err, result) => {
+      if (err) {
+        console.error('Error al verificar credenciales:', err);
+        return res.status(500).json({ error: 'Error al verificar credenciales' });
+      }
+
+      if (result.length === 1) {
+        const { rol } = result[0];
+        res.json({ rol }); // Devolver el rol si las credenciales son correctas
+      } else {
+        res.status(401).json({ error: 'Credenciales incorrectas' });
+      }
+    });
+  });
+
   router.get('/readcategoria', (req, res) => {
     // Utiliza la instancia de la base de datos pasada como parámetro
     // Realizar una consulta SQL para seleccionar todos los registros
@@ -163,16 +188,16 @@ module.exports = (db) => {
   // Ruta para crear un nuevo producto
    
   router.post('/createproducto', (req, res) => {
-    const {nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen} = req.body;
+    const {nombre, existencia, precio, descripcion, porcentaje_alcohol, idcategoria, imagen} = req.body;
   
 
-    if (!nombre || !cantidad || !precio || !descripcion || !porcentaje_alcohol || !idcategoria || !imagen) {
+    if (!nombre || !existencia || !precio || !descripcion || !porcentaje_alcohol || !idcategoria || !imagen) {
       return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
   
     // Consulta SQL para insertar un nuevo producto
-    const sql = 'INSERT INTO producto (nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen) VALUES (?,?,?,?,?,?,?)';
-    const values = [nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen];
+    const sql = 'INSERT INTO producto (nombre, existencia, precio, descripcion, porcentaje_alcohol, idcategoria, imagen) VALUES (?,?,?,?,?,?,?)';
+    const values = [nombre, existencia, precio, descripcion, porcentaje_alcohol, idcategoria, imagen];
   
     // Ejecuta la consulta SQL
     db.query(sql, values, (err, result) => {
@@ -192,7 +217,7 @@ module.exports = (db) => {
     router.post('/createempleado', (req, res) => {
       const {nombre, apellido, telefono, direccion, correo} = req.body
     
-      // Verifica si se proporcionó el nombre de la categoría
+      // Verifica si se proporcionó el nombre del empleado
       if (!nombre ||!apellido ||!telefono ||!direccion ||!correo) {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
       }
@@ -215,34 +240,13 @@ module.exports = (db) => {
 
     //Ruta para insertar pedidos
 
-    router.post('/createpedido', (req, res) => {
-      const {cantidad, fecha, total, costo} = req.body
-    
-      // Verifica si se proporcionó el nombre de la categoría
-      if (!cantidad || !fecha || !total || !costo) {
-        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-      }
-    
-      // Consulta SQL para insertar una nueva categoría
-      const sql = `INSERT INTO pedido (cantidad, fecha, total, costo) VALUES (?,?,?,?)`;
-      const values = [cantidad, fecha, total, costo];
-    
-      // Ejecuta la consulta SQL
-      db.query(sql, values, (err, result) => {
-        if (err) {
-          console.error('Error al insertar pedido:', err);
-          res.status(500).json({ error: 'Error al insertar pedido' });
-        } else {
-          // Devuelve una respuesta exitosa
-          res.status(201).json({ message: 'pedido agregado con éxito' });
-        }
-      });
-    });
+   // router.post('/createpedido', (req, res) => {
+      //
 
 
-    //Ruta para insertar marcas
+    //Ruta para insertar categorias
 
-    router.post('/createmarca', (req, res) => {
+    router.post('/createcategoria', (req, res) => {
       const {nombre} = req.body
     
       // Verifica si se proporcionó el nombre de la categoría
@@ -251,46 +255,50 @@ module.exports = (db) => {
       }
     
       // Consulta SQL para insertar una nueva categoría
-      const sql = 'INSERT INTO marca (nombre) VALUES (?)';
+      const sql = 'INSERT INTO categoria (nombre) VALUES (?)';
       const values = [nombre];
     
       // Ejecuta la consulta SQL
       db.query(sql, values, (err, result) => {
         if (err) {
-          console.error('Error al insertar marca:', err);
-          res.status(500).json({ error: 'Error al insertar marca' });
+          console.error('Error al insertar categoria:', err);
+          res.status(500).json({ error: 'Error al insertar categoria' });
         } else {
           // Devuelve una respuesta exitosa
-          res.status(201).json({ message: 'marca agregada con éxito' });
+          res.status(201).json({ message: 'categoria agregada con éxito' });
         }
       });
     });
    
-    //Ruta para insertar venta
+    // Ruta para registrar una venta con su detalle
+  router.post('/createventa', (req, res) => {
+    // Extraer datos de la solicitud
+    const { fecha, DNI, idempleado, tipo_de_venta, detalle} = req.body;
 
-    router.post('/createventa', (req, res) => {
-      const {fecha, cantidad} = req.body
-    
-      // Verifica si se proporcionó el nombre de la categoría
-      if (!fecha ||!cantidad) {
-        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+    // Realizar la inserción de la venta en la tabla Ventas
+    const sqlVenta = 'INSERT INTO venta (fecha,DNI, idempleado, tipo_de_venta) VALUES (?, ?, ?, ?)';
+    db.query(sqlVenta, [fecha, DNI, idempleado, tipo_de_venta], (err, result) => {
+      if (err) {
+        console.error('Error al insertar venta:', err);
+        return res.status(500).json({ error: 'Error al insertar venta' });
       }
-    
-      // Consulta SQL para insertar una nueva categoría
-      const sql = 'INSERT INTO venta (fecha, cantidad) VALUES (?,?)';
-      const values = [fecha, cantidad];
-    
-      // Ejecuta la consulta SQL
-      db.query(sql, values, (err, result) => {
+
+      const idventa = result.insertId; // Obtener el ID de la venta insertada
+
+      // Iterar sobre el detalle de la venta y realizar inserciones en DetalleVenta
+      const sqlDetalle = 'INSERT INTO detalleventa (cantidad, precio, idproducto, idventa) VALUES ?';
+      const values = detalle.map((item) => [item.cantidad, item.precio, item.idproducto, idventa]);
+      db.query(sqlDetalle, [values], (err, result) => {
         if (err) {
-          console.error('Error al insertar venta:', err);
-          res.status(500).json({ error: 'Error al insertar Usuario' });
-        } else {
-          // Devuelve una respuesta exitosa
-          res.status(201).json({ message: 'venta agregada con éxito' });
+          console.error('Error al insertar detalle de venta:', err);
+          return res.status(500).json({ error: 'Error al insertar detalle de venta' });
         }
+
+        // Devolver respuesta exitosa
+        res.status(201).json({ message: 'Venta y detalle de venta agregados con éxito' });
       });
     });
+  });
 
     //Ruta para insertar detalle de venta
 
@@ -321,7 +329,7 @@ module.exports = (db) => {
 
     //Ruta para actualizar un registro existente por ID (Marca)
 
-    router.put('/updatemarca/:id', (req, res) => {
+    router.put('/updatecategoria/:id', (req, res) => {
       // Obtén el ID del registro a actualizar desde los parámetros de la URL
       const id = req.params.id;
   
@@ -335,9 +343,9 @@ module.exports = (db) => {
   
       // Realiza la consulta SQL para actualizar el registro por ID
       const sql = `
-        UPDATE marca
+        UPDATE categoria
         SET nombre = ?
-        WHERE idmarca = ?
+        WHERE idcategoria = ?
       `;
   
       const values = [nombre,id];
@@ -359,15 +367,15 @@ module.exports = (db) => {
 
     router.put('/updateproducto/:id', (req, res) => {
       const idproducto = req.params.id;
-      const { nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen } = req.body;
+      const { nombre, existencia, precio, descripcion, porcentaje_alcohol, idcategoria, imagen } = req.body;
     
-      if (!nombre || !cantidad || !precio || !descripcion || !porcentaje_alcohol || !idcategoria || !imagen) {
+      if (!nombre || !existencia || !precio || !descripcion || !porcentaje_alcohol || !idcategoria || !imagen) {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
       }
     
       // Consulta SQL para actualizar un producto
-      const sql = 'UPDATE producto SET nombre = ?, cantidad = ?, precio = ?, descripcion = ?, porcentaje_alcohol = ?, idcategoria = ?, imagen = ? WHERE idproducto = ?';
-      const values = [nombre, cantidad, precio, descripcion, porcentaje_alcohol, idcategoria, imagen, idproducto];
+      const sql = 'UPDATE producto SET nombre = ?, existencia = ?, precio = ?, descripcion = ?, porcentaje_alcohol = ?, idcategoria = ?, imagen = ? WHERE idproducto = ?';
+      const values = [nombre, existencia, precio, descripcion, porcentaje_alcohol, idcategoria, imagen, idproducto];
     
       // Ejecuta la consulta SQL
       db.query(sql, values, (err, result) => {
@@ -396,7 +404,7 @@ module.exports = (db) => {
       const {nombre, apellido, direccion, correo, telefono} = req.body;
   
       // Verifica si se proporcionaron los datos necesarios
-      if (!nombre) {
+      if (!nombre || !apellido || !direccion || !correo || !telefono ) {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
       }
   
@@ -432,18 +440,18 @@ module.exports = (db) => {
       const {nombre, apellido, telefono, direccion, correo} = req.body;
   
       // Verifica si se proporcionaron los datos necesarios
-      if (!nombre) {
+      if (!nombre || !apellido || !telefono || !direccion || !correo) {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
       }
   
       // Realiza la consulta SQL para actualizar el registro por ID
       const sql = `
         UPDATE empleado
-        SET nombre=?, apellido=?, telefono=?, direccion=?, correo = ?
+        SET nombre=?, apellido=?, telefono=?, direccion=?, correo =?
         WHERE idempleado = ?
       `;
   
-      const values = [nombre, apellido, direccion, correo, telefono];
+      const values = [nombre, apellido, telefono, direccion, correo, id];
   
       // Ejecuta la consulta
       db.query(sql, values, (err, result) => {
@@ -468,7 +476,7 @@ module.exports = (db) => {
       const {cantidad, fecha, total, costo} = req.body;
   
       // Verifica si se proporcionaron los datos necesarios
-      if (!cantidad) {
+      if (!cantidad ) {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
       }
   
@@ -500,27 +508,27 @@ module.exports = (db) => {
       const id = req.params.id;
   
       // Recibe los datos actualizados desde el cuerpo de la solicitud (req.body)
-      const {fecha, cantidad} = req.body;
+      const {fecha, tipo_de_venta} = req.body;
   
       // Verifica si se proporcionaron los datos necesarios
-      if (!fecha) {
+      if (!fecha || !tipo_de_venta) {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
       }
   
       // Realiza la consulta SQL para actualizar el registro por ID
       const sql = `
         UPDATE venta
-        SET fecha=?, cantidad = ?
+        SET fecha=?, tipo_de_venta = ?
         WHERE idventa = ?
       `;
   
-      const values = [fecha, cantidad];
+      const values = [fecha, tipo_de_venta,id];
   
       // Ejecuta la consulta
       db.query(sql, values, (err, result) => {
         if (err) {
           console.error('Error al actualizar el registro:', err);
-          res.status(500).json({ error: 'Error al actualizar el registro' });
+          res.status(500).json({ error: 'Error al actualizar el registro dela venta' });
         } else {
           // Devuelve un mensaje de éxito
           res.status(200).json({ message: 'Registro actualizado con éxito' });
@@ -580,7 +588,7 @@ module.exports = (db) => {
       } else {
         // Devuelve un mensaje de éxito
         res.status(200).json({ message: 'Registro eliminado con éxito' });
-      }s
+      }
     });
   });
   
@@ -628,12 +636,12 @@ module.exports = (db) => {
 
   // Ruta para eliminar un registro existente por ID (marca)
 
-  router.delete('/deletemarca/:id', (req, res) => {
+  router.delete('/deletecategoria/:id', (req, res) => {
     // Obtén el ID del registro a eliminar desde los parámetros de la URL
     const id = req.params.id;
 
     // Realiza la consulta SQL para eliminar el registro por ID
-    const sql = 'DELETE FROM marca WHERE idmarca = ?';
+    const sql = 'DELETE FROM categoria WHERE idcategoria = ?';
 
     // Ejecuta la consulta
     db.query(sql, [id], (err, result) => {

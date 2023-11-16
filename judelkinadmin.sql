@@ -1,6 +1,33 @@
 CREATE DATABASE judelkin;
-
 use judelkin;
+
+select * from categoria;
+
+ALTER TABLE producto
+DROP COLUMN imagen;
+
+CREATE TABLE Imagenes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL,
+  imagenUrl VARCHAR(255) NOT NULL
+);
+
+INSERT INTO Imagenes (nombre, imagenUrl)
+VALUES ('Nombre de la imagen', 'URL_de_la_imagen');
+
+CREATE TABLE usuario (
+  id_Usuario Int NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  nombre_Usuario Varchar(30) NOT NULL,
+  contrasena Varchar(16) NOT NULL,
+  rol Varchar(20) NOT NULL
+);
+
+INSERT INTO Usuario (nombre_Usuario, contrasena, rol)  VALUES ('mil02','12345', 'admin');
+INSERT INTO Usuario (nombre_Usuario, contrasena, rol)  VALUES ('julio','123456', 'ventas');
+SELECT * FROM usuario;
+
+ALTER TABLE producto
+ADD imagen longtext; 
 
 CREATE TABLE producto (
   idproducto int auto_increment primary key,
@@ -31,16 +58,6 @@ CREATE TABLE cliente (
   telefono varchar(8)
 );
 
-CREATE TABLE pedido (
-  idpedido int auto_increment primary key,
-  cantidad varchar(30),
-  fecha Date,
-  total INT,
-  costo Decimal,
-  DNI int,
-  foreign key (DNI) references cliente (DNI)
-);
-
 CREATE TABLE categoria (
   idcategoria int auto_increment primary key,
   nombre varchar(255)
@@ -68,7 +85,7 @@ CREATE TABLE detalleventa (
 
 
 /*Inserciones*/
-INSERT INTO producto (nombre, existencia, precio, descripcion, porcentaje_alcohol)
+INSERT INTO producto (nombre, existencia, precio, descripcion, porcentaje_alcohol, imagen)
 VALUES ('estrellita', 2, 125, 'guaro fino', '35');
 
 select * from producto;
@@ -84,13 +101,9 @@ select * from categoria;
 INSERT INTO empleado(nombre, apellido, telefono, direccion, correo)
 VALUES ('juani', 'baez', '87654321', 'avenida1', 'juanbaez@gmail.com');
 
-INSERT INTO pedido(cantidad, fecha, total, costo)
-VALUES (40, '2023-09-10', 40, 10);
 
-select * from pedido;
-
-INSERT INTO venta(fecha, cantidad)
-VALUES ('2024-05-20', 10);
+INSERT INTO venta(fecha, tipo_de_venta)
+VALUES ('2024-05-20', 'presencial');
 
 INSERT INTO detalleventa(cantidad, precio)
 VALUES (30, 100);
@@ -98,7 +111,7 @@ VALUES (30, 100);
 /*Actualizaciones*/
 update venta 
 set fecha = '2023-10-06',
-	cantidad = 10
+	tipo_de_venta = 'en linea'
     where idventa = 1;
 
 
@@ -114,14 +127,6 @@ set nombre = 'vodka',
     descripcion = 'agua ardiente',
     porcentaje_alcohol = 6.9
     where idproducto = 4;
-
-    
-update pedido
-set cantidad = 10,
-    fecha = '2023-10-04',
-    total = 1500,
-    costo = 50
-    where idpedido = 1;
     
 update empleado
 set nombre = 'lennox',
@@ -137,8 +142,6 @@ set nombre = 'lennox',
     
     select * from categoria;
     
-    
-    
 update cliente 
 set nombre = 'narutp',
     apellido = 'uzumaki',
@@ -150,15 +153,20 @@ set nombre = 'narutp',
     /*procedimiento eliminar*/
     
     delete from categoria
-    where idcategoria = 1;
+    where idcategoria = 3;
+    
+    select * from categoria;
     
     delete from cliente
     where DNI = 1;
     
+    delete from producto
+    where idproducto = 1;
+    
     
 
 select *
-from cliente;
+from producto;
 
 /*creacion de rol administrador*/
 create role 'administrador';
@@ -382,36 +390,18 @@ CREATE PROCEDURE insertarproducto(
     IN cantidad INT,
     IN precio decimal(12, 4),
     IN descripcion VARCHAR(30),
-	IN idMarca INT,
+	IN idcategoria INT,
 	IN porcentaje_alcohol decimal(10,0)
    
    
 )
 BEGIN
-    INSERT INTO producto (nombre, cantidad, precio, descripcion, id_Marca, porcentaje_alcohol)
-    VALUES (nombre, cantidad, precio, descripcion, idMarca, porcentaje_alcohol);
+    INSERT INTO producto (nombre, cantidad, precio, descripcion, idcategoria, porcentaje_alcohol)
+    VALUES (nombre, cantidad, precio, descripcion, idcategoria, porcentaje_alcohol);
 END //
 
 DELIMITER ;
 
--- INSERTAR PEDIDO
-
-DELIMITER //
-
-CREATE PROCEDURE insertarpedido(
-    IN cantidad varchar(30),
-    IN fecha date,
-    IN total int,
-    IN costo decimal,
-    IN DNI INT
-
-)
-BEGIN
-    INSERT INTO pedido (cantidad,fecha,total, costo, DNI)
-    VALUES (cantidad,fecha,total, costo, DN);
-END //
-
-DELIMITER ;
 
 -- INSERTAR DetalleVenta
 
@@ -508,7 +498,7 @@ CREATE PROCEDURE actualizarproducto(
     IN descripcion VARCHAR(30),
     IN precio DECIMAL,
     IN cantidad INT,
-    IN idMarca INT,
+    IN idcategoria INT,
     IN porcentaje_alcohol decimal
 )
 BEGIN
@@ -518,7 +508,7 @@ BEGIN
         descripcion = descripcion,
         precio = precio,
         existencia = existencia,
-        idMarca = idMarca,
+        idcategoria = idcategoria,
         porcentaje_alcohol = porcentaje_alcohol
     WHERE idProducto = idProducto;
 END //
@@ -678,7 +668,7 @@ BEGIN
     AND cantidad = cantidad
     AND precio = precio
     AND descripcion = descripcion
-    AND idmarca = idmarca
+    AND idcategoria = idcategoria
     AND porcentaje_alcohol = porcentaje_alcohol;
 END //
 
@@ -730,30 +720,7 @@ END //
 
 DELIMITER ;
 
-/*ELIMINAR PEDIDO*/
-
-DELIMITER //
-
-CREATE PROCEDURE eliminarpedido(
-    IN cantidad VARCHAR(30),
-    IN fecha date,
-    IN total int,
-    IN costo decimal(10,0),
-    IN DNI VARCHAR(30)
-)
-BEGIN
-    DELETE FROM pedido
-    WHERE idpedido = idpedido
-    AND cantidad = cantidad
-    AND fecha = fecha
-    AND total = total
-    AND costo = costo
-    AND DNI = DNI;
-END //
-
-DELIMITER ;
-
-/*eliminar marca*/
+/*eliminar categoria*/
 
 DELIMITER //
 
@@ -792,12 +759,10 @@ END //
 
 DELIMITER ;
 
-ALTER USER 'admin'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY 'admin1234';
-
-
-DELIMITER //
-
-CREATE TRIGGER Salida productos
+/*Triger que permita actualizar la existencia en la tabla producto al realizar ventas*/
+DELIMITER $$
+CREATE DEFINER = CURRENT_USER
+TRIGGER Salidaproductos
 BEFORE INSERT ON detalleventa
 FOR EACH ROW
 BEGIN
@@ -817,8 +782,10 @@ BEGIN
     ELSE 
     SIGNAL SQLSTATE 'ERROR' SET MESSAGE_TEXT = 'Cantidad de producto no disponible';
     END IF;
-END    
+END$$
 
 DELIMITER ;
+
+select * from bitacora;
 
 /*DROP PROCEDURE IF EXISTS ActualizarProductos ;*/

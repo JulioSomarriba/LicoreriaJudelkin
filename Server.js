@@ -11,8 +11,8 @@ app.use(express.json({ limit: '50mb' })); // Aumenta el límite del tamaño del 
 // Configuración de la conexión a la base de datos
 const db = mysql.createConnection({
     host: 'localhost',
-    user: 'root',
-    password: 'gitdev2051',
+    user: 'admin',
+    password: 'admin1234',
     database: 'judelkin'
   });
   
