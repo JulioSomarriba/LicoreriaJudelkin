@@ -29,22 +29,7 @@ module.exports = (db) => {
     });
   });
 
-  router.get('/readcategoria', (req, res) => {
-    // Utiliza la instancia de la base de datos pasada como parámetro
-    // Realizar una consulta SQL para seleccionar todos los registros
-    const sql = 'SELECT * FROM categoria';
-
-    // Ejecutar la consulta
-    db.query(sql, (err, result) => {
-      if (err) {
-        console.error('Error al leer registros:', err);
-        res.status(500).json({ error: 'Error al leer registros' });
-      } else {
-        // Devolver los registros en formato JSON como respuesta
-        res.status(200).json(result);
-      }
-    });
-  });
+ //
 
   router.get('/readcliente', (req, res) => {
     // Utiliza la instancia de la base de datos pasada como parámetro
@@ -246,29 +231,7 @@ module.exports = (db) => {
 
     //Ruta para insertar categorias
 
-    router.post('/createcategoria', (req, res) => {
-      const {nombre} = req.body
-    
-      // Verifica si se proporcionó el nombre de la categoría
-      if (!nombre) {
-        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-      }
-    
-      // Consulta SQL para insertar una nueva categoría
-      const sql = 'INSERT INTO categoria (nombre) VALUES (?)';
-      const values = [nombre];
-    
-      // Ejecuta la consulta SQL
-      db.query(sql, values, (err, result) => {
-        if (err) {
-          console.error('Error al insertar categoria:', err);
-          res.status(500).json({ error: 'Error al insertar categoria' });
-        } else {
-          // Devuelve una respuesta exitosa
-          res.status(201).json({ message: 'categoria agregada con éxito' });
-        }
-      });
-    });
+    //
    
     // Ruta para registrar una venta con su detalle
   router.post('/createventa', (req, res) => {
@@ -318,7 +281,7 @@ module.exports = (db) => {
       db.query(sql, values, (err, result) => {
         if (err) {
           console.error('Error al insertar detalle de venta:', err);
-          res.status(500).json({ error: 'Error al insertar Usuario' });
+          res.status(500).json({ error: 'Error al insertar el detalle de venta' });
         } else {
           // Devuelve una respuesta exitosa
           res.status(201).json({ message: 'venta agregada con éxito' });
@@ -329,38 +292,7 @@ module.exports = (db) => {
 
     //Ruta para actualizar un registro existente por ID (Marca)
 
-    router.put('/updatecategoria/:id', (req, res) => {
-      // Obtén el ID del registro a actualizar desde los parámetros de la URL
-      const id = req.params.id;
-  
-      // Recibe los datos actualizados desde el cuerpo de la solicitud (req.body)
-      const {nombre} = req.body;
-  
-      // Verifica si se proporcionaron los datos necesarios
-      if (!nombre) {
-        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-      }
-  
-      // Realiza la consulta SQL para actualizar el registro por ID
-      const sql = `
-        UPDATE categoria
-        SET nombre = ?
-        WHERE idcategoria = ?
-      `;
-  
-      const values = [nombre,id];
-  
-      // Ejecuta la consulta
-      db.query(sql, values, (err, result) => {
-        if (err) {
-          console.error('Error al actualizar el registro:', err);
-          res.status(500).json({ error: 'Error al actualizar el registro' });
-        } else {
-          // Devuelve un mensaje de éxito
-          res.status(200).json({ message: 'Registro actualizado con éxito' });
-        }
-      });
-    });
+    
 
 
     //Ruta para actualizar un registro existente por ID (producto)
@@ -557,7 +489,7 @@ module.exports = (db) => {
         WHERE iddetalleventa = ?
       `;
   
-      const values = [cantidad, precio];
+      const values = [cantidad, precio,id];
   
       // Ejecuta la consulta
       db.query(sql, values, (err, result) => {
@@ -636,24 +568,7 @@ module.exports = (db) => {
 
   // Ruta para eliminar un registro existente por ID (marca)
 
-  router.delete('/deletecategoria/:id', (req, res) => {
-    // Obtén el ID del registro a eliminar desde los parámetros de la URL
-    const id = req.params.id;
-
-    // Realiza la consulta SQL para eliminar el registro por ID
-    const sql = 'DELETE FROM categoria WHERE idcategoria = ?';
-
-    // Ejecuta la consulta
-    db.query(sql, [id], (err, result) => {
-      if (err) {
-        console.error('Error al eliminar el registro:', err);
-        res.status(500).json({ error: 'Error al eliminar el registro' });
-      } else {
-        // Devuelve un mensaje de éxito
-        res.status(200).json({ message: 'Registro eliminado con éxito' });
-      }
-    });
-  });
+ //
 
   // Ruta para eliminar un registro existente por ID (pedido)
 
@@ -719,10 +634,115 @@ module.exports = (db) => {
   });
 
 
+  router.put('/updatecategoria/:id', (req, res) => {
+    // Obtén el ID del registro a actualizar desde los parámetros de la URL
+    const id = req.params.id;
+
+    // Recibe los datos actualizados desde el cuerpo de la solicitud (req.body)
+    const {nombre} = req.body;
+
+    // Verifica si se proporcionaron los datos necesarios
+    if (!nombre) {
+      return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+    }
+
+    // Realiza la consulta SQL para actualizar el registro por ID
+    const sql = `
+      UPDATE categoria
+      SET nombre = ?
+      WHERE idcategoria = ?
+    `;
+
+    const values = [nombre,id];
+
+    // Ejecuta la consulta
+    db.query(sql, values, (err, result) => {
+      if (err) {
+        console.error('Error al actualizar el registro:', err);
+        res.status(500).json({ error: 'Error al actualizar el registro' });
+      } else {
+        // Devuelve un mensaje de éxito
+        res.status(200).json({ message: 'Registro actualizado con éxito' });
+      }
+    });
+  });
+
+
+    // Ruta para eliminar un registro existente por ID (marca)
+
+    router.delete('/deletecategoria/:id', (req, res) => {
+      // Obtén el ID del registro a eliminar desde los parámetros de la URL
+      const id = req.params.id;
+  
+      // Realiza la consulta SQL para eliminar el registro por ID
+      const sql = 'DELETE FROM categoria WHERE idcategoria = ?';
+  
+      // Ejecuta la consulta
+      db.query(sql, [id], (err, result) => {
+        if (err) {
+          console.error('Error al eliminar el registro:', err);
+          res.status(500).json({ error: 'Error al eliminar el registro' });
+        } else {
+          // Devuelve un mensaje de éxito
+          res.status(200).json({ message: 'Registro eliminado con éxito' });
+        }
+      });
+    });
+
+
+  //Realizacion de procedimientos almacenados en la tabla empleados
+
+  // Ruta para leer la tabla Categoria de la Base de Datos, empleando procedimientos almacenados
+
+  router.get('/readcategoria', (req, res) => {
+    const storedProcedure = 'seleccionarcategoria';
+    db.query(`CALL ${storedProcedure}('nombre')`, (err, result) => {
+      if (err) {
+        console.error(`Error al ejecutar el procedimiento almacenado ${storedProcedure}:`, err);
+        res.status(500).json({ error: `Error al ejecutar el procedimiento almacenado ${storedProcedure}`, details: err });
+      } else {
+        res.status(200).json(result[0]);
+      }
+    });
+  });
+  
+
+  // Ruta para insertar registros en la tabla Categoria de la Base de Datos, empleando procedimientos almacenados
+
+router.post('/createcategoria', (req, res) => {
+  // Recibe los datos del nuevo registro desde el cuerpo de la solicitud (req.body)
+  const { nombre } = req.body;
+
+  // Verifica si se proporcionaron los datos necesarios
+  if (!nombre) {
+    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  }
+
+  // Nombre del procedimiento almacenado
+  const storedProcedure = 'InsertarCategoria';
+
+  // Llama al procedimiento almacenado
+  db.query(
+    `CALL ${storedProcedure}(?)`,
+    [nombre],
+    (err, result) => {
+      if (err) {
+        console.error(`Error al ejecutar el procedimiento almacenado ${storedProcedure}:`, err);
+        res.status(500).json({ error: `Error al ejecutar el procedimiento almacenado ${storedProcedure}` });
+      } else {
+        // Devuelve un mensaje como respuesta
+        res.status(200).json({ message: 'Registro agregado exitosamente' });
+      }
+    }
+  );
+});
+
+
   return router;
 
-
 }; 
+
+
 
 
 
