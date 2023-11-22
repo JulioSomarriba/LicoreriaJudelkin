@@ -106,7 +106,9 @@ INSERT INTO venta(fecha, tipo_de_venta)
 VALUES ('2024-05-20', 'presencial');
 
 INSERT INTO detalleventa(cantidad, precio)
-VALUES (30, 100);
+VALUES (40, 500);
+
+select * from producto;
 
 /*Actualizaciones*/
 update venta 
@@ -472,21 +474,26 @@ DELIMITER ;
 
 -- Procedimientos Actualizar
 
--- ACTUALIZAR MARCA
+-- ACTUALIZAR CATEGORIA
 
 DELIMITER //
 
-CREATE PROCEDURE ActualizarCategoria(
-    IN id INT,
-    IN nombre VARCHAR(255)
-)
+CREATE PROCEDURE ActualizarCategoria(IN nuevoNombre VARCHAR(255))
 BEGIN
-    UPDATE Categoria
-    SET nombre = nombre
+    -- Lógica para actualizar la categoría
+    UPDATE categoria
+    SET nombre = nuevoNombre
     WHERE idcategoria = idcategoria;
 END //
 
 DELIMITER ;
+
+
+CALL ActualizarCategoria('afua');
+
+select * from categoria;
+
+DROP PROCEDURE IF EXISTS ActualizarCategoria;
 
 -- ACTUALIZAR PRODUCTOS
 
@@ -759,33 +766,38 @@ END //
 
 DELIMITER ;
 
-/*Triger que permita actualizar la existencia en la tabla producto al realizar ventas*/
-DELIMITER $$
-CREATE DEFINER = CURRENT_USER
-TRIGGER Salidaproductos
-BEFORE INSERT ON detalleventa
-FOR EACH ROW
+DELIMITER //
+
+CREATE PROCEDURE seleccionarcategoria(IN nombre VARCHAR(255))
 BEGIN
-	DECLARE idp INT DEFAULT 0;
-    DECLARE cant INT DEFAULT 0;
-    
-    /*Asigna el nuevo idproducto que se guarda en detalle*/
-    SET idp=NEW.idproducto;
-    /*Asigna la cantidad de productos guarda en detalle venta*/
-    SET cant=NEW.cantidad;
-    /*Actualiza la existencia en la tabla producto*/
-    IF ((SELECT existencia FROM producto WHERE producto.idproducto=idp) > cant) THEN
-    
-    UPDATE producto SET existencia=existencia
-    WHERE idproducto=idp;
-    
-    ELSE 
-    SIGNAL SQLSTATE 'ERROR' SET MESSAGE_TEXT = 'Cantidad de producto no disponible';
-    END IF;
-END$$
+    SELECT *
+    FROM categoria
+    WHERE nombre = nombre;
+END //
 
 DELIMITER ;
 
-select * from bitacora;
+CALL seleccionarcategoria('nombre');
+
+
+DROP PROCEDURE IF EXISTS seleccionarcategoria;
+
+//Triggers para actualizar el stock de los productos una vez realizada una compra
+
+DELIMITER //
+CREATE TRIGGER actualizar_cantidad_producto
+AFTER INSERT ON detalleventa
+FOR EACH ROW
+BEGIN
+    -- Actualizar la cantidad en la tabla Productos restando la cantidad comprada
+    UPDATE producto
+    SET existencia = existencia - NEW.cantidad
+    WHERE idproducto = NEW.idproducto;
+END;
+
+
+DELIMITER ;
+
+/*DROP TRIGGER IF EXISTS calcular_total_venta;*/
 
 /*DROP PROCEDURE IF EXISTS ActualizarProductos ;*/
