@@ -1,6 +1,31 @@
 const express = require('express');
 const router = express.Router();
 
+router.get('productosPorCategoria' , (req, res) => {
+  const sql = `
+  SELECT
+  Categoria.NombreCategoria,
+  COUNT(Producto.IDProducto) AS   CantidadProducto
+  FROM
+  Producto
+  INNER JOIN
+  Categoria ON Producto.IDCategoria
+  GROUP BY
+  Categoria.IDCategoria
+  
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('Error al obtener la cantidad de productospor categoria:', err);
+      res.status(500).json({error: 'Error al obtener la cantidad de productos por categoria '});
+    } else {
+      res.status(200).json(result);
+    }
+  });
+  });
+
+
 //Ruta para consultar clientes
 module.exports = (db) => {
 
